@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>SaviorGuess</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<style>
+:root{--bg:#0f172a;--card:rgba(0,0,0,.45);--text:white;--accent:#6366f1}
+.light{--bg:#f8fafc;--card:rgba(255,255,255,.95);--text:#111827}
+body{margin:0;font-family:Arial;background:linear-gradient(-45deg,#4f46e5,#7c3aed,#22c55e,#ef4444);background-size:400% 400%;animation:bg 15s infinite;color:var(--text);display:flex;align-items:center;justify-content:center;min-height:100vh}
+@keyframes bg{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.card{background:var(--card);padding:20px;border-radius:16px;width:100%;max-width:460px;box-shadow:0 20px 40px rgba(0,0,0,.4)}
+h1{text-align:center}
+input,select,button{width:100%;padding:10px;margin-top:8px;border-radius:8px;border:none;font-size:16px}
+input,select{color:black}button{cursor:pointer;font-weight:bold}
+.primary{background:var(--accent);color:white}.success{background:#22c55e;color:black}.danger{background:#ef4444;color:white}
+.icons{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}.icon{font-size:24px;text-align:center;opacity:.6;cursor:pointer}.icon.selected{opacity:1;transform:scale(1.2)}
+.game-image{width:100%;height:200px;object-fit:cover;border-radius:10px;margin-top:10px}
+.hint{background:white;color:black;padding:10px;border-radius:8px;margin-top:10px;font-weight:bold}
+.top{display:flex;justify-content:space-between;font-size:14px;font-weight:bold}
+.message{text-align:center;font-weight:bold;margin-top:8px}
+</style>
+</head>
+<body class="dark">
+<div id="app" class="card"></div>
+<script>
+const ICONS=["🧠","🔥","🎯","⚡","👑","🎮","🛡️","🚀"];
+const DIFFICULTIES={Easy:{t:30,p:10},Medium:{t:25,p:15},Hard:{t:20,p:25},SaviorPro:{t:15,p:40},ExpertSavior:{t:10,p:60}};
+const GAMES=[{a:"overwatch",i:"https://upload.wikimedia.org/wikipedia/en/5/51/Overwatch_cover_art.jpg",h:["Team shooter","Heroes","Blizzard","Payload","Tracer"]},{a:"mortal kombat",i:"https://upload.wikimedia.org/wikipedia/en/9/9d/Mortal_Kombat_11.jpg",h:["Fighting","Fatalities","Violence","Finish Him","Scorpion"]}];
+let app=document.getElementById("app"),player="",icon=ICONS[0],difficulty="Easy",speed=false,score=0,g=0,h=0,time=30,timer=null;
+function tone(f){let c=new AudioContext(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=f;g.gain.value=.15;o.start();o.stop(c.currentTime+.2)}
+function setup(){app.innerHTML=`<h1>🎮 SaviorGuess</h1><input id="name" placeholder="Player name"><div class="icons">${ICONS.map(i=>`<div class=icon>${i}</div>`).join('')}</div><button class=primary id=start disabled>Start Game</button>`;document.querySelectorAll('.icon').forEach(x=>x.onclick=()=>{document.querySelectorAll('.icon').forEach(i=>i.classList.remove('selected'));x.classList.add('selected');icon=x.textContent;tone(440)});document.querySelector('.icon').classList.add('selected');name.oninput=()=>start.disabled=!name.value.trim();start.onclick=()=>{player=name.value;tone(880);gameUI()}}
+function startTimer(){clearInterval(timer);time=DIFFICULTIES[difficulty].t;if(!speed)return;timer=setInterval(()=>{time--;if(time<=0)next(false);gameUI()},1000)}
+function next(win){clearInterval(timer);if(win)score+=DIFFICULTIES[difficulty].p+(speed?time:0);g=(g+1)%GAMES.length;h=0;startTimer();gameUI(win?"✅ Correct":"⏰ Time up")}
+function guess(){let val=document.getElementById('guess').value.toLowerCase();tone(440);if(val===GAMES[g].a){tone(880);next(true)}else{tone(220);h=Math.min(h+1,GAMES[g].h.length-1);gameUI('❌ Wrong')}}
+function gameUI(msg=''){app.innerHTML=`<h1>🎮 SaviorGuess</h1><div class=top><span>${icon} ${player}</span><span>Score ${score}</span>${speed?`<span>⏱ ${time}s</span>`:''}</div><select id=diff>${Object.keys(DIFFICULTIES).map(d=>`<option ${d===difficulty?'selected':''}>${d}</option>`).join('')}</select><button class=${speed?'danger':'primary'} id=speedBtn>${speed?'Disable':'Enable'} Speed</button><img src="${GAMES[g].i}" class=game-image><div class=hint>${GAMES[g].h[h]}</div><input id=guess placeholder="Your guess"><button class=success id=sub>Submit</button><div class=message>${msg}</div>`;diff.onchange=e=>{difficulty=e.target.value;startTimer()};speedBtn.onclick=()=>{speed=!speed;startTimer()};sub.onclick=guess}
+setup();
+</script>
+</body>
+</html>
